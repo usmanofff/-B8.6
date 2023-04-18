@@ -1,0 +1,46 @@
+version: '3.8'
+x-logging:
+      &logging
+      driver: "json-file"
+      options:
+            max-size: "100m"
+            max-file: "1"
+
+services:
+      php:
+            build: .
+
+            volumes:
+                  - ./www:/var/www:ro
+
+            networks:
+                  - net
+            restart: unless-stopped
+            logging: *logging
+
+      nginx:
+            image: 'nginx:1.24-alpine'
+
+            healthcheck:
+                  test: ["CMD-SHELL", "curl -s http://nginx|grep 'It works!' || exit 1"]
+                  interval: 1s
+                  timeout: 3s
+                  retries: 30
+            ports:
+                  - '${port:-8080}:80'
+
+            volumes:
+                  - ./www:/var/www:ro
+                  - ./nginx:/etc/nginx/conf.d:ro
+            networks:
+                  - net
+            restart: unless-stopped
+            
+            logging: *logging
+
+networks:
+      net:
+
+
+
+
